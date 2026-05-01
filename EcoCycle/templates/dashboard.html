@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>EcoCycle™ | J&K Smart Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        html, body { 
+            overflow-x: hidden; 
+            scroll-behavior: smooth; 
+            margin: 0; padding: 0; 
+            width: 100%; 
+            background: #f8fafc;
+            zoom: 0.98;
+        }
+        #cinematic-welcome {
+            position: fixed; inset: 0; background: #064e3b;
+            z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.8s ease-out; cursor: pointer;
+        }
+        .leaf { position: absolute; top: -20px; animation: fall linear infinite; pointer-events: none; z-index: 210; }
+        @keyframes fall { to { transform: translateY(100vh) rotate(360deg); } }
+        
+        /* Realistic Tree Growth & Bloom */
+        .tree-main { display: inline-block; animation: riseFromSoil 2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; transform-origin: bottom; }
+        .bloom-effect { 
+            opacity: 0; 
+            animation: flowerBloom 1.5s ease-out 1.2s infinite alternate; 
+            filter: drop-shadow(0 0 5px rgba(255,182,193,0.6));
+        }
+        .leaf-blink {
+            position: absolute; font-size: 20px; opacity: 0;
+            animation: leafAppear 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes riseFromSoil { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+        @keyframes flowerBloom { 0% { transform: scale(0.8) rotate(-5deg); opacity: 0.6; } 100% { transform: scale(1.1) rotate(5deg); opacity: 1; } }
+        @keyframes leafAppear { 0% { opacity: 0.2; transform: translateY(0); } 100% { opacity: 1; transform: translateY(-5px); } }
+
+        .moving-earth { font-size: 70px; animation: floating 3s ease-in-out infinite; }
+        @keyframes floating {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(5deg); }
+        }
+        .glass-result {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+            border-radius: 30px;
+        }
+        #sidebar { transition: transform 0.4s ease-in-out; transform: translateX(100%); }
+        #sidebar.open { transform: translateX(0); }
+        .grass-shadow {
+            box-shadow: 0 25px 50px -12px rgba(16, 185, 129, 0.4);
+            border-bottom: 5px solid #10b981;
+        }
+    </style>
+</head>
+<body>
+    <div id="welcome-leaves-container"></div>
+
+    <div id="cinematic-welcome" onclick="dismissWelcome()">
+        <div class="text-center animate__animated animate__fadeIn">
+            <h1 class="text-8xl font-black text-white mb-4 tracking-tighter">ECOCYCLE</h1>
+            <p class="text-emerald-400 text-xl font-bold tracking-[0.4em] uppercase">Jammu & Kashmir</p>
+            <div id="welcomeNameDisplay" class="mt-8 text-white text-3xl font-bold border-b-2 border-emerald-500/30 pb-2 mb-6"></div>
+            
+            <!-- New Strong Quote & Welcome Line -->
+            <div class="mt-4 max-w-2xl px-6">
+                <p class="text-white text-xl font-medium italic mb-4">"Welcome to the movement that turns waste into wonder."</p>
+                <p class="text-emerald-100 text-lg leading-relaxed opacity-80">
+                    "The greatest threat to our planet is the belief that someone else will save it. <br> 
+                    <span class="font-bold text-emerald-400">Scan. Segregate. Save.</span> Preserving the Crown of India begins with you."
+                </p>
+            </div>
+            
+            <p class="mt-12 text-white/50 text-sm animate-pulse tracking-widest uppercase">Click to Enter Dashboard</p>
+        </div>
+    </div>
+
+    <nav class="bg-white p-5 flex justify-between items-center sticky top-0 z-50 shadow-sm px-6 md:px-16">
+        <span class="text-2xl font-black text-green-900 tracking-tighter">EcoCycle™</span>
+        <div class="hidden md:flex flex-1 justify-end space-x-12 items-center mr-10">
+            <a href="/dashboard" class="text-green-950 font-bold uppercase text-xs tracking-widest">Scanner</a>
+            <a href="/benefits" class="text-green-950 font-bold uppercase text-xs tracking-widest">Benefits</a>
+            <button onclick="toggleMarketplace()" class="text-green-950 font-bold uppercase text-xs tracking-widest">Marketplace</button>
+            <button onclick="scrollToLedger()" class="text-green-950 font-bold uppercase text-xs tracking-widest">Activity Ledger</button>
+        </div>
+        <button onclick="toggleSidebar()" class="text-2xl text-green-950">☰</button>
+    </nav>
+
+    <div id="sidebar" class="fixed right-0 top-0 h-full w-80 bg-green-950 text-white z-[60] p-10 shadow-2xl flex flex-col items-center">
+        <button onclick="toggleSidebar()" class="text-3xl self-end">✕</button>
+        <div class="mt-10 text-center">
+            <p class="text-emerald-400 font-bold text-xs uppercase tracking-widest mb-2">Authenticated User</p>
+            <h4 id="sidebarName" class="text-2xl font-black tracking-tighter">User</h4>
+            <div class="mt-6 moving-earth">🌍</div>
+        </div>
+        <div class="mt-12 space-y-8 w-full">
+            <a href="/benefits" class="block text-xl font-black border-b border-white/10 pb-2">🌱 MISSION</a>
+            <a href="/dashboard" class="block text-xl font-black border-b border-white/10 pb-2">📸 SCANNER</a>
+        </div>
+        <div class="mt-auto pb-10">
+            <a href="/" class="bg-red-500 px-10 py-3 rounded-full font-black text-xs uppercase tracking-widest">Logout</a>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto py-10 px-6">
+        <div class="grid lg:grid-cols-2 gap-10 items-start">
+            <div class="text-center lg:text-left lg:sticky lg:top-32">
+                <div class="relative inline-block mb-4">
+                    <!-- Tree with Realistic Blooming/Blinking Elements -->
+                    <span class="text-[120px] tree-main relative">
+                        🌳
+                        <span class="leaf-blink" style="top: 20px; left: 30px;">🍃</span>
+                        <span class="leaf-blink" style="top: 40px; right: 20px; animation-delay: 1s;">🍃</span>
+                    </span>
+                    <span class="text-[50px] bloom-effect absolute -top-4 -right-4">🌸</span>
+                </div>
+                <h2 class="text-6xl font-black text-green-950 leading-none tracking-tighter">Preserving the <br><span class="text-emerald-600">Crown of India.</span></h2>
+                <div class="mt-10">
+                    <input type="file" id="fileInp" class="hidden" onchange="loadPreview(event)">
+                    <label for="fileInp" class="cursor-pointer bg-green-900 text-white px-12 py-5 rounded-full font-black text-lg hover:bg-black transition-all inline-block shadow-2xl">
+                        UPLOAD IMAGE
+                    </label>
+                </div>
+            </div>
+
+            <div id="scanDisplay" class="hidden animate__animated animate__fadeInRight">
+                <div class="bg-white p-4 rounded-[2.5rem] border border-emerald-50 grass-shadow">
+                    <img id="previewBox" class="w-full h-[450px] object-contain bg-slate-50 rounded-[2rem]">
+                    <button id="aiBtn" onclick="triggerAI()" class="w-full bg-emerald-950 text-white py-5 rounded-2xl font-black text-xl mt-6 tracking-widest shadow-lg">RUN AI ANALYSIS</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="modalBox" class="hidden fixed inset-0 bg-black/90 z-[120] flex items-center justify-center p-6">
+            <div class="glass-result p-12 max-w-3xl w-full text-center relative overflow-hidden">
+                <div class="absolute -top-10 -left-10 w-40 h-40 bg-emerald-500/20 blur-3xl"></div>
+                <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-green-500/20 blur-3xl"></div>
+                <p class="text-emerald-400 font-bold tracking-[0.5em] text-xs mb-4 uppercase">Classification Successful</p>
+                <h3 class="text-2xl text-white/60 font-bold uppercase mb-2">Result is:</h3>
+                <h2 class="text-7xl font-black text-emerald-400 mb-6 drop-shadow-[0_0_15px_rgba(52,211,153,0.3)]" id="finalLabel">---</h2>
+                <div class="flex justify-center gap-4 mb-10">
+                    <div class="bg-yellow-400 px-8 py-3 rounded-full text-black font-black text-xl shadow-lg" id="finalConf">0% Score</div>
+                </div>
+                <div class="bg-white/5 p-8 rounded-3xl text-left border border-white/10 mb-8">
+                    <p id="finalSugg" class="text-xl text-white/90 font-medium italic"></p>
+                </div>
+                <button onclick="closeModal()" class="bg-white text-green-950 px-12 py-4 rounded-xl font-black tracking-widest uppercase hover:scale-105 transition-transform">Close & Reset</button>
+            </div>
+        </div>
+
+        <section id="ledgerSection" class="mt-20">
+            <h2 class="text-2xl font-black text-green-950 mb-8 border-l-4 border-emerald-500 pl-4">Global Activity Ledger</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {% for img in database_images %}
+                <div class="bg-white p-2 rounded-3xl shadow-sm hover:shadow-lg transition-shadow">
+                    <img src="{{ url_for('send_file', filename=img) }}" class="w-full h-40 object-cover rounded-2xl">
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+
+    <div id="marketModal" class="hidden fixed inset-0 bg-green-950/95 z-[110] flex items-center justify-center p-6">
+        <div class="bg-white rounded-[2rem] p-10 max-w-sm w-full text-center">
+            <h2 class="text-2xl font-black mb-4">MARKETPLACE</h2>
+            <p class="text-gray-600 font-bold mb-8 italic">Coming soon to Jammu and Srinagar. Connect with local recyclers.</p>
+            <button onclick="toggleMarketplace()" class="w-full bg-green-950 text-white py-4 rounded-xl font-bold">CLOSE</button>
+        </div>
+    </div>
+
+    <script>
+        const TM_MODEL = "https://teachablemachine.withgoogle.com/models/H4WuD-gzz/";
+        let aiModel;
+
+        function setupUser() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const loginName = urlParams.get('username') || "Mahi"; 
+            const isRefreshed = sessionStorage.getItem('hasVisited');
+            
+            if (!isRefreshed) {
+                document.getElementById('welcomeNameDisplay').innerText = "Hello, " + loginName;
+                document.getElementById('sidebarName').innerText = loginName;
+                sessionStorage.setItem('hasVisited', 'true');
+                sessionStorage.setItem('cachedName', loginName);
+            } else {
+                const tag = "Eco-Contributor 🌱";
+                document.getElementById('welcomeNameDisplay').innerText = tag;
+                document.getElementById('sidebarName').innerText = "Eco-Contributor";
+            }
+        }
+
+        async function init() {
+            setupUser();
+            spawnLeaves();
+            aiModel = await tmImage.load(TM_MODEL + "model.json", TM_MODEL + "metadata.json");
+        }
+
+        function spawnLeaves() {
+            const box = document.getElementById('welcome-leaves-container');
+            for(let i=0; i<10; i++){
+                let l = document.createElement('div');
+                l.className = 'leaf'; l.innerHTML = '🍃';
+                l.style.left = Math.random()*100 + 'vw';
+                l.style.animationDuration = (Math.random()*5 + 3) + 's';
+                box.appendChild(l);
+            }
+        }
+
+        function dismissWelcome() {
+            document.getElementById('cinematic-welcome').style.opacity = '0';
+            setTimeout(() => { document.getElementById('cinematic-welcome').style.display = 'none'; }, 800);
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        }
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+        function toggleMarketplace() { document.getElementById('marketModal').classList.toggle('hidden'); }
+        function scrollToLedger() { document.getElementById('ledgerSection').scrollIntoView({behavior:'smooth'}); }
+        function closeModal() { document.getElementById('modalBox').classList.add('hidden'); }
+
+        function loadPreview(e) {
+            const r = new FileReader();
+            r.onload = () => {
+                document.getElementById('previewBox').src = r.result;
+                document.getElementById('scanDisplay').classList.remove('hidden');
+            }
+            r.readAsDataURL(e.target.files[0]);
+        }
+
+        async function triggerAI() {
+            if(!aiModel) return alert("Model is still loading, please wait a second.");
+            const btn = document.getElementById('aiBtn');
+            btn.innerText = "Processing...";
+            const results = await aiModel.predict(document.getElementById('previewBox'));
+            const best = results.sort((a,b) => b.probability - a.probability)[0];
+            document.getElementById('finalLabel').innerText = best.className;
+            document.getElementById('finalConf').innerText = (best.probability*100).toFixed(1) + "% Score";
+            document.getElementById('modalBox').classList.remove('hidden');
+            btn.innerText = "RUN AI ANALYSIS";
+            let fd = new FormData();
+            fd.append('file', document.getElementById('fileInp').files[0]);
+            fd.append('ai_label', best.className);
+            fetch('/analyze', {method:'POST', body:fd}).then(r => r.json()).then(data => {
+                document.getElementById('finalSugg').innerText = data.reason;
+            });
+        }
+        init();
+    </script>
+</body>
+</html>

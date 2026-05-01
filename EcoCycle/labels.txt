@@ -1,0 +1,3 @@
+0 Reuse
+1 Repair
+2 Recycle

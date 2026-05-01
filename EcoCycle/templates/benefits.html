@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Our Mission | EcoCycle</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .benefit-card { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; }
+        .benefit-card:hover { transform: scale(1.05) translateY(-10px); background: #f0fff4; border-color: #2d6a4f; }
+    </style>
+</head>
+<body class="bg-emerald-50 flex items-center justify-center min-h-screen p-6">
+    <div class="max-w-4xl w-full">
+        <h1 class="text-5xl font-black text-green-900 text-center mb-12">Environmental Impact</h1>
+        
+        <div class="grid md:grid-cols-2 gap-6">
+            <div class="glass-card p-8 benefit-card border-2 border-transparent">
+                <h3 class="text-2xl font-bold text-green-700 mb-2">🌍 Landfill Rescue</h3>
+                <p class="text-gray-600">Our AI identifies items that can avoid the dump, reducing soil pollution in Jammu.</p>
+            </div>
+            <div class="glass-card p-8 benefit-card border-2 border-transparent">
+                <h3 class="text-2xl font-bold text-green-700 mb-2">💰 Carbon Cash</h3>
+                <p class="text-gray-600">Turn your waste into wealth with our price prediction engine.</p>
+            </div>
+            <div class="glass-card p-8 benefit-card border-2 border-transparent">
+                <h3 class="text-2xl font-bold text-green-700 mb-2">📍 Hyper-Local</h3>
+                <p class="text-gray-600">Connect with neighbors to reduce transportation emissions.</p>
+            </div>
+            <div class="glass-card p-8 benefit-card border-2 border-transparent">
+                <h3 class="text-2xl font-bold text-green-700 mb-2">♻️ Circularity</h3>
+                <p class="text-gray-600">We promote a cycle of repair and reuse over "buy and throw."</p>
+            </div>
+        </div>
+
+        <div class="text-center mt-12">
+            <button onclick="window.location.href='/dashboard'" class="btn-leaf px-12 py-4">Back to Dashboard</button>
+        </div>
+    </div>
+</body>
+</html>
